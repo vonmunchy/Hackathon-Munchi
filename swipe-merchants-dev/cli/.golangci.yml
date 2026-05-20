@@ -1,0 +1,57 @@
+version: "2"
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - staticcheck
+    - revive
+    - ineffassign
+    - unused
+
+  settings:
+    revive:
+      severity: warning
+      rules:
+        - name: blank-imports
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: unused-parameter
+          disabled: true
+        - name: var-declaration
+        - name: var-naming
+    gosec:
+      excludes:
+        # G104 (errcheck) is covered by errcheck itself with our policy.
+        - G104
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

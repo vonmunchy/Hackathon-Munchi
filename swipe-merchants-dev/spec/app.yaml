@@ -1,0 +1,773 @@
+openapi: 3.1.0
+info:
+  title: Swipe Public Merchants API
+  description: Public API for merchant integrations with the Swipe platform.
+  version: 1.2.0
+  contact:
+    name: Swipe API Support
+    email: api-support@swipe.mv
+
+servers:
+  - url: https://merchant-api.swipeapp.dev
+    description: Development environment
+  - url: https://merchants-api.swipe.mv
+    description: Production environment
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Merchant
+    description: Merchant-facing endpoints
+  - name: Debug
+    description: Debug and testing endpoints
+  - name: Authentication
+    description: Authentication endpoints
+
+paths:
+  /health/alive:
+    get:
+      operationId: healthAlive
+      summary: Liveness probe
+      description: Returns OK if the service is running. Does not check dependencies.
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /health/ready:
+    get:
+      operationId: healthReady
+      summary: Readiness probe
+      description: Returns OK if the service is ready to accept traffic. Checks all dependencies.
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+
+  /api/v1/balance:
+    get:
+      operationId: getBalance
+      summary: Get wallet balance
+      description: Retrieve the current available and pending balance in your merchant wallet for all supported currencies (MVR, USD).
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [wallet:balance]
+        - oauth2Prod: [wallet:balance]
+      responses:
+        '200':
+          description: List of wallet balances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BalanceResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/payments:
+    post:
+      operationId: createPayment
+      summary: Create payment
+      description: Generate a new payment request with a unique short code that customers can use to complete payment through the Swipe app.
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [payments:contact, "payments:link", "payments:qr"]
+        - oauth2Prod: [payments:contact, "payments:link", "payments:qr"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/payments/{paymentId}:
+    get:
+      operationId: getPaymentStatus
+      summary: Get payment status
+      description: Check the current status of a payment request using its unique identifier. Use the `id` returned from the create payment endpoint.
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [transactions:status]
+        - oauth2Prod: [transactions:status]
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          description: The payment request UUID returned when creating the payment
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/payments/{paymentId}/stream:
+    get:
+      operationId: streamPaymentStatus
+      summary: Stream payment status updates
+      description: |
+        Establishes a Server-Sent Events (SSE) connection to stream real-time status updates 
+        for a payment request. The connection remains open and sends events as the payment 
+        status changes (e.g., PENDING → COMPLETED).
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [transactions:status]
+        - oauth2Prod: [transactions:status]
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          description: The UUID of the payment request to monitor
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event stream established successfully
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream with payment status updates
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/history:
+    get:
+      operationId: getTransactionHistory
+      summary: Get transaction history
+      description: Retrieve a paginated list of all transactions associated with your merchant account, including payments, payouts, and other wallet activities.
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [transactions:history]
+        - oauth2Prod: [transactions:history]
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of transactions to return per page
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: Number of transactions to skip for pagination
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/v1/transactions/{reference}:
+    get:
+      operationId: getTransactionStatus
+      summary: Get transaction status
+      description: Check the current status of a transaction using its transaction code (the same value returned as `reference` on payment / payout responses).
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [transactions:status]
+        - oauth2Prod: [transactions:status]
+      parameters:
+        - name: reference
+          in: path
+          required: true
+          description: The transaction code (reference) to look up
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/payouts:
+    post:
+      operationId: createPayout
+      summary: Create payout
+      description: Initiate a withdrawal from your merchant wallet to a linked bank account. Use the `bank_account_id` from the Get Bank Accounts endpoint.
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [wallet:withdraw]
+        - oauth2Prod: [wallet:withdraw]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePayoutRequest'
+      responses:
+        '201':
+          description: Payout initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/bank-accounts:
+    get:
+      operationId: getBankAccounts
+      summary: Get linked bank accounts
+      description: Retrieve all bank accounts linked to your merchant wallet. Use the returned account IDs (`id` field) when creating payout requests.
+      tags:
+        - Merchant
+      security:
+        - oauth2Dev: [wallet:balance]
+        - oauth2Prod: [wallet:balance]
+      responses:
+        '200':
+          description: List of linked bank accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccountResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/v1/whoami:
+    get:
+      operationId: getWhoAmI
+      summary: Who am I
+      description: Returns the authenticated client's identity, merchant association, and granted scopes.
+      tags:
+        - Debug
+      security:
+        - oauth2Dev: []
+        - oauth2Prod: []
+      responses:
+        '200':
+          description: Authenticated client context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhoAmIResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    oauth2Dev:
+      type: oauth2
+      description: |
+        OAuth2 client credentials flow for development environment.
+
+        Get API credentials from the [Swipe Merchant Portal](https://merchant.swipe.mv) under **Settings → API Access**.
+
+        **Get an access token:**
+        ```bash
+        curl -X POST https://merchant-api.swipeapp.dev/oauth2/token \
+          -d grant_type=client_credentials \
+          -d client_id=YOUR_CLIENT_ID \
+          -d client_secret=YOUR_CLIENT_SECRET
+        ```
+
+        Include the token in all API requests: `Authorization: Bearer YOUR_ACCESS_TOKEN`
+
+        Server metadata is available at `/.well-known/oauth-authorization-server` (RFC 8414).
+      flows:
+        clientCredentials:
+          tokenUrl: https://merchant-api.swipeapp.dev/oauth2/token
+          x-scalar-credentials-location: header
+          scopes:
+            "payments:link": "Generate payment links"
+            "payments:contact": "Send payment requests to contacts"
+            "payments:qr": "Generate payment QR codes"
+            "transactions:history": "List and search transactions"
+            "transactions:status": "Check status of a specific transaction"
+            "wallet:balance": "Read current wallet balance"
+            "wallet:withdraw": "Initiate withdrawals to linked accounts"
+
+    oauth2Prod:
+      type: oauth2
+      description: |
+        OAuth2 client credentials flow for production environment.
+
+        Get API credentials from the [Swipe Merchant Portal](https://merchant.swipe.mv) under **Settings → API Access**.
+
+        **Get an access token:**
+        ```bash
+        curl -X POST https://merchants-api.swipe.mv/oauth2/token \
+          -d grant_type=client_credentials \
+          -d client_id=YOUR_CLIENT_ID \
+          -d client_secret=YOUR_CLIENT_SECRET
+        ```
+
+        Include the token in all API requests: `Authorization: Bearer YOUR_ACCESS_TOKEN`
+
+        Server metadata is available at `/.well-known/oauth-authorization-server` (RFC 8414).
+      flows:
+        clientCredentials:
+          tokenUrl: https://merchants-api.swipe.mv/oauth2/token
+          x-scalar-credentials-location: header
+          scopes:
+            "payments:link": "Generate payment links"
+            "payments:contact": "Send payment requests to contacts"
+            "payments:qr": "Generate payment QR codes"
+            "transactions:history": "List and search transactions"
+            "transactions:status": "Check status of a specific transaction"
+            "wallet:balance": "Read current wallet balance"
+            "wallet:withdraw": "Initiate withdrawals to linked accounts"
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          example: ok
+
+    ReadinessResponse:
+      type: object
+      required:
+        - status
+        - checks
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, unhealthy]
+          example: ok
+        checks:
+          type: object
+          properties:
+            database:
+              $ref: '#/components/schemas/HealthCheck'
+            redis:
+              $ref: '#/components/schemas/HealthCheck'
+            temporal:
+              $ref: '#/components/schemas/HealthCheck'
+
+    HealthCheck:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [ok, unhealthy]
+        message:
+          type: string
+
+    WhoAmIResponse:
+      type: object
+      required:
+        - client_id
+        - merchant_id
+      properties:
+        client_id:
+          type: string
+          description: The OAuth2 client ID from the token
+        merchant_id:
+          type: string
+          description: The merchant ID associated with this client
+        scopes:
+          type: array
+          items:
+            type: string
+          description: The scopes granted to this token
+
+    BalanceResponse:
+      type: object
+      required:
+        - available_balance
+        - pending_balance
+        - currency
+      properties:
+        available_balance:
+          type: number
+        pending_balance:
+          type: number
+        currency:
+          type: string
+
+    CreatePaymentRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [MVR, USD]
+          default: MVR
+        type:
+          type: string
+          enum: [QR, CONTACT, LINK]
+          default: QR
+        description:
+          type: string
+        recipient_vpa:
+          type: string
+          description: VPA of the recipient for contact-based payment requests. Required if type is CONTACT.
+
+    PaymentResponse:
+      type: object
+      required:
+        - id
+        - amount
+        - currency
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, EXPIRED, CANCELLED]
+        reference:
+          type: string
+          description: Transaction code for this payment. Also known as reference.
+        short_code:
+          type: string
+        qr_data:
+          type: string
+          description: Base64 encoded PNG image of the EMV QR code for the payment request. Only populated if type is QR. The underlying payload is an EMVCo Merchant Presented Mode (MPM) string; consumers display the image rather than parsing the EMV directly.
+        payment_url:
+          type: string
+          description: Full URL to the payment portal for this request. Only populated if type is LINK.
+        created_at:
+          type: string
+          format: date-time
+
+    HistoryResponse:
+      type: object
+      required:
+        - transactions
+        - total
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionItem'
+        total:
+          type: integer
+
+    TransactionItem:
+      type: object
+      required:
+        - id
+        - amount
+        - currency
+        - status
+      properties:
+        id:
+          type: string
+        reference:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        description:
+          type: string
+        gross_amount:
+          type: number
+          description: Pre-fee amount before any deductions.
+        fee_amount:
+          type: number
+          description: Fee withheld by the platform for this transaction.
+        net_amount:
+          type: number
+          description: Amount the merchant receives after fees.
+        original_amount:
+          type: number
+          description: Source amount prior to FX conversion (if applicable).
+        created_at:
+          type: string
+          format: date-time
+
+    CreatePayoutRequest:
+      type: object
+      required:
+        - amount
+        - bank_account_id
+      properties:
+        amount:
+          type: number
+        bank_account_id:
+          type: string
+          format: uuid
+
+    PayoutResponse:
+      type: object
+      required:
+        - id
+        - amount
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        status:
+          type: string
+        reference:
+          type: string
+          description: Unique transaction reference for checking status.
+        created_at:
+          type: string
+          format: date-time
+
+    BankAccountResponse:
+      type: object
+      required:
+        - id
+        - account_number
+        - account_holder_name
+        - currency
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the bank account
+        account_number:
+          type: string
+          description: Bank account number (may be masked for security)
+        account_holder_name:
+          type: string
+          description: Name of the account holder
+        currency:
+          type: string
+          description: Currency of the bank account
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED, CLOSED]
+          description: Current status of the bank account
+
+    WebhookEvent:
+      type: object
+      required:
+        - eventType
+        - data
+      properties:
+        eventType:
+          type: string
+          description: The type of event
+          example: transaction.state_changed
+        data:
+          $ref: '#/components/schemas/WebhookData'
+
+    WebhookData:
+      type: object
+      required:
+        - transaction_id
+        - transaction_code
+        - wallet_id
+        - status
+        - amount
+        - currency
+      properties:
+        client_id:
+          type: string
+          format: uuid
+          description: The OAuth2 client ID associated with the merchant
+        transaction_id:
+          type: string
+          format: uuid
+          description: Unique internal identifier for the transaction
+        transaction_code:
+          type: string
+          description: Human-readable transaction reference
+        wallet_id:
+          type: string
+          format: uuid
+          description: The merchant's wallet ID
+        type:
+          type: string
+          description: Transaction type (e.g., P2M)
+        status:
+          type: string
+          description: Current status of the transaction (e.g., COMPLETED)
+        amount:
+          type: number
+          description: Transaction amount
+        currency:
+          type: string
+          description: Currency code (e.g., MVR, USD)
+        entry_type:
+          type: string
+          description: Entry type (CREDIT/DEBIT)
+        sender_vpa:
+          type: string
+          description: VPA of the sender
+        recipient_vpa:
+          type: string
+          description: VPA of the recipient
+        post_date:
+          type: string
+          format: date-time
+          description: When the transaction was posted
+        created_at:
+          type: string
+          format: date-time
+          description: When the transaction was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the transaction was last updated
+
+    ProblemDetails:
+      type: object
+      description: RFC 9457 Problem Details response
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Error type identifier
+          example: VALIDATION_ERROR
+        detail:
+          type: string
+          description: Human-readable error detail
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      required:
+        - name
+        - reason
+      properties:
+        name:
+          type: string
+          description: Field name that failed validation
+        reason:
+          type: string
+          description: Why the field failed validation
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: VALIDATION_ERROR
+            detail: Request validation failed
+
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: UNAUTHORIZED
+            detail: Missing or invalid authentication token
+
+    Forbidden:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: FORBIDDEN
+            detail: Insufficient scope
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: NOT_FOUND
+            detail: Resource not found
+
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds to wait before retrying
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: RATE_LIMITED
+            detail: Rate limit exceeded

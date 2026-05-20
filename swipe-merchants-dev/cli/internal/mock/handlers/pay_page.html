@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pay — {{.MerchantName}}</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0f1419;color:#e6e6e6;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{background:#1a1f2e;border-radius:12px;padding:28px;max-width:420px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,0.4)}
+  .banner{background:#3d2914;color:#ffb454;border:1px solid #5a3a1a;border-radius:6px;padding:10px 12px;margin-bottom:20px;font-size:13px;text-align:center}
+  h1{margin:0 0 6px;font-size:18px;font-weight:600;color:#a3b1c6}
+  .merchant{font-size:22px;font-weight:600;margin:0 0 24px}
+  .amount{font-size:36px;font-weight:700;margin:0 0 4px}
+  .currency{color:#7d8aa3;font-size:14px;display:inline-block;margin-left:6px;vertical-align:middle}
+  .ref{color:#7d8aa3;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin:0 0 24px}
+  .desc{color:#a3b1c6;font-size:14px;margin:0 0 24px;font-style:italic}
+  .qr{display:flex;justify-content:center;margin:20px 0}
+  .qr img{width:200px;height:200px;border-radius:8px;background:#fff;padding:8px}
+  .qr-caption{text-align:center;color:#7d8aa3;font-size:12px;margin-top:4px}
+  .status{display:flex;align-items:center;gap:8px;padding:12px;background:#0f1419;border-radius:8px;margin:20px 0;font-size:14px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .dot-pending{background:#f5a623;animation:pulse 2s infinite}
+  .dot-completed{background:#5cb85c}
+  .dot-failed{background:#d9534f}
+  .dot-cancelled{background:#6c757d}
+  .dot-expired{background:#5b6478}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .status-label{color:#a3b1c6}
+  .status-value{font-weight:600;letter-spacing:0.5px}
+  .actions{display:flex;gap:8px;flex-direction:column;margin-top:20px}
+  .actions form{margin:0;display:flex}
+  button{flex:1;padding:12px 16px;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s}
+  button:hover{opacity:.85}
+  .btn-pay{background:#5cb85c;color:#fff}
+  .btn-cancel{background:#3a3f4f;color:#e6e6e6}
+  .btn-expire{background:#5a2d2d;color:#ffb4b4}
+  .terminal{text-align:center;padding:24px;color:#7d8aa3;font-size:14px}
+  .terminal-icon{font-size:48px;margin-bottom:8px}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="banner">⚠ Mock payment — no real money moves</div>
+    <h1>You are paying</h1>
+    <p class="merchant">{{.MerchantName}}</p>
+    <div class="amount">{{.AmountFormatted}}<span class="currency">{{.Currency}}</span></div>
+    <p class="ref">Reference: {{.Reference}}</p>
+    {{if .Description}}<p class="desc">{{.Description}}</p>{{end}}
+    {{if .QRImage}}
+    <div class="qr"><img src="data:image/png;base64,{{.QRImage}}" alt="QR code"></div>
+    <div class="qr-caption">Scan with a QR-aware payment client</div>
+    {{end}}
+    <div class="status">
+      <span class="dot dot-{{.StatusClass}}"></span>
+      <span class="status-label">Status:</span>
+      <span class="status-value">{{.Status}}</span>
+    </div>
+    {{if .IsPending}}
+    <div class="actions">
+      <form method="post" action="/pay/{{.Reference}}/complete">
+        <button class="btn-pay" type="submit">Pay {{.AmountFormatted}} {{.Currency}} (mock)</button>
+      </form>
+      <form method="post" action="/pay/{{.Reference}}/cancel">
+        <button class="btn-cancel" type="submit">Cancel</button>
+      </form>
+      <form method="post" action="/pay/{{.Reference}}/expire">
+        <button class="btn-expire" type="submit">Force-expire</button>
+      </form>
+    </div>
+    {{else}}
+    <div class="terminal">This payment is in a terminal state. Refresh after creating a new payment.</div>
+    {{end}}
+  </div>
+</body>
+</html>

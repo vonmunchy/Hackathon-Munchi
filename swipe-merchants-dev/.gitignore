@@ -1,0 +1,22 @@
+# Build output
+/bin/
+/cli/bin/
+/example/example
+coverage.out
+/cli/coverage.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local-only state (the running mock writes here)
+*.pid
+*.db
+
+# Working/scratch docs (TODO tracking, research, ad-hoc notes)
+/docs/.scratched/
+
+# Claude Code per-project workspace (CLAUDE.md, etc.)
+/.claude/
