@@ -1,89 +1,259 @@
 'use client'
 
 import Link from 'next/link'
+import { useRef } from 'react'
+import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useIsMobile } from '@/lib/use-device'
+import { useEffect, useState } from 'react'
 
-/* ---- Phone Mockup (CSS-only) ---- */
-function PhoneMockup() {
+/* ---- Animated Counter ---- */
+function AnimatedCounter({ target, suffix = '', prefix = '' }: { target: number; suffix?: string; prefix?: string }) {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: '-50px' })
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (!isInView) return
+    const controls = animate(0, target, {
+      duration: 2,
+      ease: 'easeOut',
+      onUpdate(value) {
+        setDisplay(Math.floor(value))
+      },
+    })
+    return () => controls.stop()
+  }, [isInView, target])
+
   return (
-    <div className="relative mx-auto w-[260px] h-[480px]">
-      <div className="absolute inset-0 rounded-[2.5rem] border-[2px] border-slate-200 bg-white shadow-xl overflow-hidden">
-        {/* Status bar */}
-        <div className="h-7 bg-slate-50 flex items-center justify-between px-6">
-          <span className="text-[9px] text-slate-400 font-medium">9:41</span>
-          <div className="flex gap-1">
-            <div className="w-3 h-1.5 rounded-sm bg-slate-300" />
-            <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-          </div>
-        </div>
-        {/* App content */}
-        <div className="px-4 pt-3">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 rounded-full bg-amethyst-600 flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold">S</span>
-            </div>
-            <span className="text-[11px] font-semibold text-slate-800">Swipe</span>
-          </div>
-          {/* Exchange listing mockup */}
-          <div className="mb-3 rounded-xl border border-slate-100 p-3 bg-slate-50/50">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-semibold text-slate-700">100 USDT</span>
-              <span className="text-[9px] font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">Active</span>
-            </div>
-            <div className="text-[9px] text-slate-500">25.50 MVR/USDT</div>
-            <div className="text-[10px] font-semibold text-amethyst-600 mt-1">2,550 MVR</div>
-          </div>
-          {/* Product mockup */}
-          <div className="mb-3 rounded-xl border border-slate-100 p-3 bg-slate-50/50">
-            <div className="flex gap-2.5">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-amethyst-100 to-amethyst-50 flex-shrink-0" />
-              <div>
-                <div className="text-[10px] font-semibold text-slate-700">Black Abaya</div>
-                <div className="text-[9px] text-slate-400">Island Finds MV</div>
-                <div className="text-[10px] font-semibold text-amethyst-600 mt-0.5">MVR 650</div>
-              </div>
-            </div>
-          </div>
-          {/* Bottom action */}
-          <div className="mt-4 rounded-xl bg-amethyst-600 py-2.5 text-center">
-            <span className="text-[10px] font-semibold text-white">Pay with Swipe</span>
-          </div>
-        </div>
-        {/* Bottom bar */}
-        <div className="absolute bottom-0 inset-x-0 h-12 border-t border-slate-100 bg-white flex items-center justify-around px-6">
-          <div className="w-5 h-5 rounded bg-amethyst-100" />
-          <div className="w-5 h-5 rounded bg-slate-100" />
-          <div className="w-5 h-5 rounded bg-slate-100" />
-        </div>
-      </div>
+    <span ref={ref} className="font-mono tabular-nums">
+      {prefix}{display.toLocaleString()}{suffix}
+    </span>
+  )
+}
+
+/* ---- Fade-in wrapper ---- */
+function FadeIn({ children, delay = 0, className = '', direction = 'up' }: {
+  children: React.ReactNode
+  delay?: number
+  className?: string
+  direction?: 'up' | 'down' | 'left' | 'right' | 'none'
+}) {
+  const directionMap = {
+    up: { y: 40, x: 0 },
+    down: { y: -40, x: 0 },
+    left: { x: 40, y: 0 },
+    right: { x: -40, y: 0 },
+    none: { x: 0, y: 0 },
+  }
+  const d = directionMap[direction]
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: d.x, y: d.y }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+/* ---- Floating Orb (background decoration) ---- */
+function FloatingOrb({ className }: { className: string }) {
+  return (
+    <motion.div
+      className={`absolute rounded-full blur-3xl opacity-20 ${className}`}
+      animate={{
+        y: [0, -20, 0],
+        scale: [1, 1.05, 1],
+      }}
+      transition={{
+        duration: 6,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      }}
+    />
+  )
+}
+
+/* ---- Grid Pattern Background ---- */
+function GridPattern() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-white/[0.07]" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
     </div>
   )
 }
 
-/* ---- Checkmark ---- */
-function CheckmarkSmall({ className }: { className?: string }) {
+/* ---- Phone Mockup (CSS-only, premium) ---- */
+function PhoneMockup() {
   return (
-    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-    </svg>
+    <motion.div
+      className="relative mx-auto w-[280px] h-[520px]"
+      initial={{ opacity: 0, y: 60, rotateY: -8 }}
+      animate={{ opacity: 1, y: 0, rotateY: 0 }}
+      transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {/* Glow behind phone */}
+      <div className="absolute -inset-8 bg-gradient-to-b from-amethyst-500/30 to-ruby-500/20 rounded-[3rem] blur-2xl" />
+
+      <div className="relative w-full h-full rounded-[2.5rem] border border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+        {/* Notch */}
+        <div className="absolute top-0 inset-x-0 flex justify-center">
+          <div className="w-28 h-6 bg-slate-900 rounded-b-2xl" />
+        </div>
+        {/* Status bar */}
+        <div className="h-10 flex items-end justify-between px-7 pb-1">
+          <span className="text-[10px] text-slate-400 font-semibold">9:41</span>
+          <div className="flex gap-1 items-center">
+            <div className="w-3.5 h-2 rounded-sm border border-slate-300" />
+          </div>
+        </div>
+        {/* App header */}
+        <div className="px-5 pt-2 pb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amethyst-500 to-amethyst-700 flex items-center justify-center shadow-md">
+              <span className="text-white text-xs font-bold">S</span>
+            </div>
+            <div>
+              <span className="text-xs font-bold text-slate-800 block leading-tight">SwipeStore</span>
+              <span className="text-[9px] text-slate-400">Marketplace</span>
+            </div>
+          </div>
+          <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center">
+            <div className="w-3 h-3 rounded-full bg-slate-300" />
+          </div>
+        </div>
+
+        {/* Balance card */}
+        <div className="mx-4 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-800 p-3.5 mb-3 shadow-lg">
+          <p className="text-[9px] text-amethyst-200 font-medium">Swipe Balance</p>
+          <p className="text-lg font-bold text-white font-mono mt-0.5">MVR 12,450</p>
+          <div className="flex gap-2 mt-2">
+            <div className="flex-1 rounded-lg bg-white/20 py-1.5 text-center">
+              <span className="text-[9px] text-white font-semibold">Send</span>
+            </div>
+            <div className="flex-1 rounded-lg bg-white/20 py-1.5 text-center">
+              <span className="text-[9px] text-white font-semibold">Top Up</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Exchange listing */}
+        <div className="mx-4 mb-2.5 rounded-xl border border-slate-100 p-3 bg-white">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="text-[8px] font-bold text-green-700">$</span>
+              </div>
+              <span className="text-[11px] font-bold text-slate-800">100 USDT</span>
+            </div>
+            <span className="text-[8px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100">Escrowed</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] text-slate-400">25.50 MVR/USDT</span>
+            <span className="text-[11px] font-bold text-amethyst-600 font-mono">2,550 MVR</span>
+          </div>
+        </div>
+
+        {/* Product card */}
+        <div className="mx-4 mb-3 rounded-xl border border-slate-100 p-3 bg-white">
+          <div className="flex gap-3">
+            <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-amethyst-50 to-ruby-50 flex-shrink-0 flex items-center justify-center">
+              <div className="w-8 h-10 rounded bg-gradient-to-b from-slate-200 to-slate-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-bold text-slate-800">Black Abaya</div>
+              <div className="text-[9px] text-slate-400">Island Finds MV</div>
+              <div className="flex items-center justify-between mt-1.5">
+                <div className="text-[11px] font-bold text-amethyst-600 font-mono">MVR 650</div>
+                <div className="rounded-md bg-amethyst-600 px-2.5 py-1">
+                  <span className="text-[8px] font-semibold text-white">Buy Now</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom nav */}
+        <div className="absolute bottom-0 inset-x-0 h-14 border-t border-slate-100 bg-white/90 backdrop-blur flex items-center justify-around px-8">
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-5 h-5 rounded bg-amethyst-100 flex items-center justify-center">
+              <div className="w-2.5 h-2.5 rounded-sm bg-amethyst-500" />
+            </div>
+            <span className="text-[7px] font-semibold text-amethyst-600">Shop</span>
+          </div>
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center">
+              <div className="w-2.5 h-2.5 rounded-full bg-slate-300" />
+            </div>
+            <span className="text-[7px] text-slate-400">Exchange</span>
+          </div>
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center">
+              <div className="w-2.5 h-2.5 rounded-sm bg-slate-300" />
+            </div>
+            <span className="text-[7px] text-slate-400">Profile</span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
   )
 }
 
-/* ---- Arrow ---- */
-function ArrowRight() {
+/* ---- Arrow Icon ---- */
+function ArrowRight({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
     </svg>
   )
 }
 
-/* ---- Step numbers ---- */
-function StepNumber({ n }: { n: number }) {
+/* ---- Feature Icons (inline SVG) ---- */
+function ShoppingIcon() {
   return (
-    <div className="w-10 h-10 rounded-full bg-amethyst-100 text-amethyst-700 flex items-center justify-center text-sm font-bold flex-shrink-0">
-      {n}
-    </div>
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M16 10a4 4 0 01-8 0" />
+    </svg>
+  )
+}
+
+function ExchangeIcon() {
+  return (
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 014-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 01-4 4H3" />
+    </svg>
+  )
+}
+
+function ShieldIcon() {
+  return (
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  )
+}
+
+function ZapIcon() {
+  return (
+    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+    </svg>
   )
 }
 
@@ -92,355 +262,517 @@ export default function Home() {
   const isMobile = useIsMobile()
 
   if (isMobile === null) {
-    return <div className="min-h-screen bg-white" />
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <motion.div
+          className="w-10 h-10 rounded-xl bg-gradient-to-br from-amethyst-500 to-ruby-500"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+        />
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-white font-body text-slate-900">
+    <div className="min-h-screen bg-white font-body text-slate-900 overflow-x-hidden">
 
       {/* ---- NAV BAR ---- */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-100">
-        <div className={`mx-auto max-w-6xl flex items-center justify-between ${isMobile ? 'px-5 h-14' : 'px-8 h-16'}`}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-amethyst-600 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">S</span>
+      <motion.nav
+        className="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-100/50"
+        initial={{ y: -80 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className={`mx-auto max-w-7xl flex items-center justify-between ${isMobile ? 'px-5 h-14' : 'px-8 h-16'}`}>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amethyst-500 to-amethyst-700 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+              <span className="text-white text-sm font-bold">S</span>
             </div>
-            <span className="font-display font-bold text-slate-900 text-lg">Swipe</span>
-          </div>
+            <span className="font-display font-extrabold text-slate-900 text-lg tracking-tight">SwipeStore</span>
+          </Link>
           {!isMobile && (
-            <div className="flex items-center gap-8">
-              <Link href="/marketplace" className="text-sm text-slate-500 hover:text-amethyst-600 transition-colors font-medium">Marketplace</Link>
-              <Link href="/exchange" className="text-sm text-slate-500 hover:text-amethyst-600 transition-colors font-medium">Exchange</Link>
-              <Link href="/seller/login" className="text-sm bg-amethyst-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amethyst-700 transition-colors">
+            <div className="flex items-center gap-1">
+              <Link href="/marketplace" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium px-4 py-2 rounded-lg hover:bg-slate-50">Marketplace</Link>
+              <Link href="/exchange" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium px-4 py-2 rounded-lg hover:bg-slate-50">Exchange</Link>
+              <div className="w-px h-6 bg-slate-200 mx-2" />
+              <Link href="/seller/login" className="text-sm bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white px-5 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-amethyst-500/25 transition-all">
                 Start Selling
               </Link>
             </div>
           )}
+          {isMobile && (
+            <Link href="/seller/login" className="text-xs bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white px-4 py-2 rounded-lg font-semibold">
+              Start Selling
+            </Link>
+          )}
         </div>
-      </nav>
+      </motion.nav>
 
-      {/* ---- HERO ---- */}
-      <section className={`relative overflow-hidden ${isMobile ? 'px-5 pt-12 pb-10' : 'px-8 pt-20 pb-24'}`}>
-        <div className={`mx-auto max-w-6xl ${isMobile ? '' : 'flex items-center gap-16'}`}>
-          {/* Text side */}
-          <div className={`${isMobile ? '' : 'flex-1'}`}>
-            <div className="inline-flex items-center gap-2 rounded-full bg-amethyst-50 border border-amethyst-100 px-3.5 py-1.5 mb-6">
-              <div className="w-1.5 h-1.5 rounded-full bg-amethyst-500" />
-              <span className="text-xs font-semibold text-amethyst-700 tracking-wide">Powered by Swipe</span>
-            </div>
+      {/* ---- HERO SECTION ---- */}
+      <section className="relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-amethyst-900" />
+        <GridPattern />
 
-            <h1 className={`font-display font-extrabold tracking-tight text-slate-900 leading-[1.1] ${isMobile ? 'text-[28px]' : 'text-[44px]'}`}>
-              What wasn&apos;t possible before&nbsp;&mdash; is&nbsp;now possible with&nbsp;Swipe
-            </h1>
+        {/* Floating orbs */}
+        <FloatingOrb className="w-96 h-96 bg-amethyst-500 -top-20 -right-20" />
+        <FloatingOrb className="w-72 h-72 bg-ruby-500 bottom-10 -left-20" />
+        <FloatingOrb className="w-64 h-64 bg-amethyst-400 top-1/2 left-1/3" />
 
-            <p className={`mt-5 text-slate-500 leading-relaxed ${isMobile ? 'text-[15px]' : 'text-lg max-w-lg'}`}>
-              Shop from local sellers or buy USDT — all with instant Swipe payments. No bank transfers. No scams. No waiting.
-            </p>
+        <div className={`relative mx-auto max-w-7xl ${isMobile ? 'px-5 pt-14 pb-16' : 'px-8 pt-24 pb-32'}`}>
+          <div className={`${isMobile ? '' : 'flex items-center gap-20'}`}>
+            {/* Text side */}
+            <div className={`${isMobile ? '' : 'flex-1'}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm px-4 py-2 mb-6"
+              >
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs font-semibold text-white/80 tracking-wide">Live in the Maldives</span>
+              </motion.div>
 
-            {/* CTAs */}
-            <div className="mt-8 flex flex-col gap-3">
-              <div className={`flex gap-3 ${isMobile ? 'flex-col' : ''}`}>
+              <motion.h1
+                className={`font-display font-extrabold tracking-tight text-white leading-[1.08] ${isMobile ? 'text-[32px]' : 'text-[56px]'}`}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              >
+                Shop, Sell &{' '}
+                <span className="bg-gradient-to-r from-amethyst-400 via-ruby-400 to-amethyst-400 bg-clip-text text-transparent">
+                  Trade Crypto
+                </span>
+                {' '}on One Platform
+              </motion.h1>
+
+              <motion.p
+                className={`mt-5 text-slate-300 leading-relaxed ${isMobile ? 'text-[15px]' : 'text-lg max-w-xl'}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.35 }}
+              >
+                SwipeStore brings social commerce and P2P crypto exchange together.
+                Buy products from local sellers. Buy and sell USDT with escrow protection.
+                All powered by instant Swipe payments.
+              </motion.p>
+
+              {/* CTAs */}
+              <motion.div
+                className={`mt-8 flex gap-3 ${isMobile ? 'flex-col' : 'flex-row'}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.5 }}
+              >
                 <Link
                   href="/marketplace"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-amethyst-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-amethyst-700 transition-all hover:shadow-md"
+                  className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-slate-900 shadow-xl hover:shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Shop Marketplace
-                  <ArrowRight />
+                  Browse Marketplace
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
                 <Link
                   href="/exchange"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-all hover:shadow-md"
+                  className="group inline-flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-amethyst-500 to-ruby-500 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-amethyst-500/25 hover:shadow-2xl hover:shadow-amethyst-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Buy Crypto
-                  <ArrowRight />
+                  Trade Crypto
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
-              </div>
-              <div className={`flex gap-4 ${isMobile ? '' : ''}`}>
-                <Link href="/seller/login" className="text-sm font-medium text-slate-500 hover:text-amethyst-600 transition-colors underline decoration-slate-300 underline-offset-4 hover:decoration-amethyst-400">
-                  Sell Products
-                </Link>
-                <Link href="/seller/login" className="text-sm font-medium text-slate-500 hover:text-amethyst-600 transition-colors underline decoration-slate-300 underline-offset-4 hover:decoration-amethyst-400">
-                  Sell Crypto
-                </Link>
-              </div>
-            </div>
-          </div>
+              </motion.div>
 
-          {/* Phone mockup — desktop only */}
-          {!isMobile && (
-            <div className="flex-shrink-0">
-              <PhoneMockup />
+              {/* Trust indicators */}
+              <motion.div
+                className={`mt-8 flex items-center gap-6 ${isMobile ? 'flex-wrap gap-4' : ''}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.7, delay: 0.7 }}
+              >
+                {[
+                  'Escrow Protected',
+                  'Instant Payments',
+                  'Zero Scams',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs text-slate-400 font-medium">{item}</span>
+                  </div>
+                ))}
+              </motion.div>
             </div>
-          )}
+
+            {/* Phone mockup */}
+            {!isMobile && (
+              <div className="flex-shrink-0 perspective-[1200px]">
+                <PhoneMockup />
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Gradient fade to white */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent" />
       </section>
 
-      {/* ---- BEFORE vs AFTER ---- */}
-      <section className={`bg-slate-50 ${isMobile ? 'px-5 py-12' : 'px-8 py-20'}`}>
-        <div className="mx-auto max-w-6xl">
-          <h2 className={`text-center font-display font-bold text-slate-900 ${isMobile ? 'text-xl' : 'text-3xl'}`}>
-            Before Swipe vs. After Swipe
-          </h2>
-          <p className="mt-3 text-center text-slate-500 text-sm max-w-xl mx-auto">
-            See how Swipe transforms the way Maldivians shop and trade
-          </p>
+      {/* ---- DUAL FEATURE SHOWCASE ---- */}
+      <section className={`relative ${isMobile ? 'px-5 py-16' : 'px-8 py-24'}`}>
+        <div className="mx-auto max-w-7xl">
+          <FadeIn className="text-center mb-16">
+            <p className="text-sm font-semibold text-amethyst-600 tracking-wide uppercase mb-3">Two Platforms, One App</p>
+            <h2 className={`font-display font-extrabold text-slate-900 ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
+              Everything you need to
+              <br className={isMobile ? 'hidden' : ''} />
+              {' '}buy, sell, and trade
+            </h2>
+          </FadeIn>
 
-          <div className={`mt-10 ${isMobile ? 'flex flex-col gap-8' : 'grid grid-cols-2 gap-8'}`}>
-            {/* Marketplace comparison */}
-            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-              <div className="px-6 py-4 bg-amethyst-50 border-b border-amethyst-100">
-                <h3 className="font-display font-bold text-amethyst-800 text-sm">Shopping</h3>
-              </div>
-              <div className={`${isMobile ? '' : 'grid grid-cols-2 divide-x divide-slate-100'}`}>
-                {/* Before */}
-                <div className="p-5">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Before</p>
-                  <div className="space-y-2.5">
-                    {['Find seller on Instagram', 'DM to check availability', 'Get bank account details', 'Make transfer & screenshot', 'Send slip, pray it\'s verified', '~15 minutes per order'].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 mt-1.5 rounded-full bg-ruby-400 flex-shrink-0" />
-                        <span className="text-xs text-slate-600 leading-relaxed">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* After */}
-                <div className={`p-5 ${isMobile ? 'border-t border-slate-100' : ''}`}>
-                  <p className="text-xs font-bold text-amethyst-600 uppercase tracking-wider mb-3">After</p>
-                  <div className="space-y-2.5">
-                    {['Browse marketplace', 'Tap to buy', 'Pay with Swipe — instant', 'Order confirmed automatically', 'Under 2 minutes'].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <CheckmarkSmall className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-slate-700 leading-relaxed font-medium">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className={`${isMobile ? 'flex flex-col gap-6' : 'grid grid-cols-2 gap-8'}`}>
+            {/* Marketplace Card */}
+            <FadeIn delay={0.1} direction="left">
+              <div className="group relative rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-amethyst-50/30 p-8 hover:border-amethyst-200 hover:shadow-xl hover:shadow-amethyst-500/5 transition-all duration-500 overflow-hidden">
+                {/* Decorative gradient */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amethyst-100/50 to-transparent rounded-bl-full" />
 
-            {/* Crypto comparison */}
-            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-              <div className="px-6 py-4 bg-slate-800 border-b border-slate-700">
-                <h3 className="font-display font-bold text-white text-sm">Crypto Exchange</h3>
-              </div>
-              <div className={`${isMobile ? '' : 'grid grid-cols-2 divide-x divide-slate-100'}`}>
-                {/* Before */}
-                <div className="p-5">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Before</p>
-                  <div className="space-y-2.5">
-                    {['Find seller on Telegram', 'Negotiate rate via chat', 'Transfer MVR to stranger', 'Hope USDT arrives', 'No recourse if scammed', 'High risk, no escrow'].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 mt-1.5 rounded-full bg-ruby-400 flex-shrink-0" />
-                        <span className="text-xs text-slate-600 leading-relaxed">{item}</span>
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amethyst-500 to-amethyst-700 flex items-center justify-center mb-6 shadow-lg shadow-amethyst-500/20 group-hover:scale-110 transition-transform">
+                    <ShoppingIcon />
+                  </div>
+                  <h3 className={`font-display font-bold text-slate-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>Social Marketplace</h3>
+                  <p className="mt-3 text-slate-500 leading-relaxed text-[15px]">
+                    Instagram and Facebook sellers get their own storefront. Customers browse, buy, and pay — all with Swipe. No more DM negotiations.
+                  </p>
+
+                  <div className="mt-6 space-y-3">
+                    {[
+                      'One-tap checkout with Swipe',
+                      'Auto-sync from social media',
+                      'Real-time order tracking',
+                      'Seller analytics dashboard',
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-amethyst-100 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-amethyst-600" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-slate-600">{feature}</span>
                       </div>
                     ))}
                   </div>
+
+                  <Link
+                    href="/marketplace"
+                    className="inline-flex items-center gap-2 mt-8 text-sm font-semibold text-amethyst-600 hover:text-amethyst-700 transition-colors group/link"
+                  >
+                    Explore Marketplace
+                    <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
+                  </Link>
                 </div>
-                {/* After */}
-                <div className={`p-5 ${isMobile ? 'border-t border-slate-100' : ''}`}>
-                  <p className="text-xs font-bold text-amethyst-600 uppercase tracking-wider mb-3">After</p>
-                  <div className="space-y-2.5">
-                    {['Browse verified listings', 'See escrow proof on-chain', 'Pay with Swipe — instant', 'USDT released automatically', 'Under 60 seconds'].map((item, i) => (
-                      <div key={i} className="flex items-start gap-2">
-                        <CheckmarkSmall className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-slate-700 leading-relaxed font-medium">{item}</span>
+              </div>
+            </FadeIn>
+
+            {/* Exchange Card */}
+            <FadeIn delay={0.2} direction="right">
+              <div className="group relative rounded-2xl border border-slate-700 bg-gradient-to-br from-slate-800 to-slate-900 p-8 hover:border-slate-600 hover:shadow-xl hover:shadow-amethyst-500/10 transition-all duration-500 overflow-hidden">
+                {/* Decorative gradient */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amethyst-500/10 to-transparent rounded-bl-full" />
+
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-ruby-500 to-amethyst-600 flex items-center justify-center mb-6 shadow-lg shadow-ruby-500/20 group-hover:scale-110 transition-transform">
+                    <ExchangeIcon />
+                  </div>
+                  <h3 className={`font-display font-bold text-white ${isMobile ? 'text-xl' : 'text-2xl'}`}>P2P Crypto Exchange</h3>
+                  <p className="mt-3 text-slate-400 leading-relaxed text-[15px]">
+                    Buy and sell USDT peer-to-peer with Swipe as the fiat rail. On-chain escrow protects every trade. No middlemen, no scams.
+                  </p>
+
+                  <div className="mt-6 space-y-3">
+                    {[
+                      'Buy & sell USDT instantly',
+                      'On-chain escrow protection',
+                      'Competitive MVR rates',
+                      'Verified trader profiles',
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-amethyst-500/20 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-3 h-3 text-amethyst-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-slate-300">{feature}</span>
                       </div>
                     ))}
                   </div>
+
+                  <Link
+                    href="/exchange"
+                    className="inline-flex items-center gap-2 mt-8 text-sm font-semibold text-amethyst-400 hover:text-amethyst-300 transition-colors group/link"
+                  >
+                    Start Trading
+                    <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
+                  </Link>
                 </div>
               </div>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>
 
       {/* ---- HOW IT WORKS ---- */}
-      <section className={`${isMobile ? 'px-5 py-12' : 'px-8 py-20'}`}>
-        <div className="mx-auto max-w-4xl">
-          <h2 className={`text-center font-display font-bold text-slate-900 ${isMobile ? 'text-xl' : 'text-3xl'}`}>
-            How It Works
-          </h2>
-          <p className="mt-3 text-center text-slate-500 text-sm">
-            Three steps — whether you&apos;re shopping or trading
-          </p>
+      <section className={`relative bg-slate-50 ${isMobile ? 'px-5 py-16' : 'px-8 py-24'}`}>
+        <div className="mx-auto max-w-6xl">
+          <FadeIn className="text-center mb-16">
+            <p className="text-sm font-semibold text-amethyst-600 tracking-wide uppercase mb-3">Simple by Design</p>
+            <h2 className={`font-display font-extrabold text-slate-900 ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
+              Three steps. That&apos;s it.
+            </h2>
+            <p className="mt-4 text-slate-500 max-w-lg mx-auto">
+              Whether you&apos;re shopping for products or trading crypto, SwipeStore keeps it effortless.
+            </p>
+          </FadeIn>
 
-          <div className={`mt-12 ${isMobile ? 'flex flex-col gap-8' : 'grid grid-cols-3 gap-12'}`}>
-            <div className={`flex ${isMobile ? 'items-start gap-4' : 'flex-col items-center text-center gap-4'}`}>
-              <StepNumber n={1} />
-              <div>
-                <h3 className="font-display font-bold text-slate-900 text-base">Browse</h3>
-                <p className="mt-1.5 text-slate-500 text-sm leading-relaxed">
-                  Find products from local sellers or USDT listings at competitive rates
-                </p>
-              </div>
-            </div>
-
-            <div className={`flex ${isMobile ? 'items-start gap-4' : 'flex-col items-center text-center gap-4'}`}>
-              <StepNumber n={2} />
-              <div>
-                <h3 className="font-display font-bold text-slate-900 text-base">Pay with Swipe</h3>
-                <p className="mt-1.5 text-slate-500 text-sm leading-relaxed">
-                  Instant MVR payment — no bank transfers, no screenshots, no waiting
-                </p>
-              </div>
-            </div>
-
-            <div className={`flex ${isMobile ? 'items-start gap-4' : 'flex-col items-center text-center gap-4'}`}>
-              <StepNumber n={3} />
-              <div>
-                <h3 className="font-display font-bold text-slate-900 text-base">Done</h3>
-                <p className="mt-1.5 text-slate-500 text-sm leading-relaxed">
-                  Products shipped to your door. USDT transferred to your wallet. Instant confirmation.
-                </p>
-              </div>
-            </div>
+          <div className={`${isMobile ? 'flex flex-col gap-8' : 'grid grid-cols-3 gap-10'}`}>
+            {[
+              {
+                step: 1,
+                title: 'Browse',
+                desc: 'Find products from Maldivian sellers or USDT listings at the best rates. Everything in one place.',
+                gradient: 'from-amethyst-500 to-amethyst-600',
+              },
+              {
+                step: 2,
+                title: 'Pay with Swipe',
+                desc: 'Instant MVR payment — no bank transfers, no screenshots, no verification delays. Just tap and done.',
+                gradient: 'from-amethyst-600 to-ruby-500',
+              },
+              {
+                step: 3,
+                title: 'Receive',
+                desc: 'Products ship to your door. USDT transfers to your wallet. Automatic confirmation for both sides.',
+                gradient: 'from-ruby-500 to-ruby-600',
+              },
+            ].map((item, i) => (
+              <FadeIn key={item.step} delay={i * 0.15}>
+                <div className="relative">
+                  {/* Connector line (desktop only) */}
+                  {!isMobile && i < 2 && (
+                    <div className="absolute top-8 left-[calc(50%+2rem)] right-0 h-px bg-gradient-to-r from-slate-300 to-slate-200 -mr-10" />
+                  )}
+                  <div className="text-center">
+                    <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-amethyst-500/15 mb-5`}>
+                      {item.step}
+                    </div>
+                    <h3 className="font-display font-bold text-slate-900 text-lg">{item.title}</h3>
+                    <p className="mt-2.5 text-slate-500 text-sm leading-relaxed max-w-xs mx-auto">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ---- WHY SWIPE ---- */}
-      <section className={`bg-slate-50 ${isMobile ? 'px-5 py-12' : 'px-8 py-20'}`}>
-        <div className="mx-auto max-w-5xl">
-          <h2 className={`text-center font-display font-bold text-slate-900 ${isMobile ? 'text-xl' : 'text-3xl'}`}>
-            Why Swipe
-          </h2>
-          <p className="mt-3 text-center text-slate-500 text-sm max-w-md mx-auto">
-            Built for how the Maldives actually does business
-          </p>
+      {/* ---- STATS SECTION ---- */}
+      <section className={`relative overflow-hidden ${isMobile ? 'px-5 py-16' : 'px-8 py-24'}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-amethyst-900/90 to-slate-900" />
+        <GridPattern />
+        <FloatingOrb className="w-80 h-80 bg-amethyst-500 -top-20 right-20" />
+        <FloatingOrb className="w-60 h-60 bg-ruby-500 bottom-0 left-10" />
 
-          <div className={`mt-10 ${isMobile ? 'flex flex-col gap-4' : 'grid grid-cols-2 gap-5'}`}>
-            {/* No Fake Transfer Slips */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 hover:border-amethyst-200 hover:shadow-sm transition-all">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-ruby-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-ruby-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-slate-900 text-[15px]">No Scams</h3>
-                  <p className="mt-1 text-slate-500 text-sm leading-relaxed">
-                    Payment is verified by Swipe before anything ships or transfers. No fake screenshots, no chargebacks.
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div className="relative mx-auto max-w-6xl">
+          <FadeIn className="text-center mb-14">
+            <p className="text-sm font-semibold text-amethyst-400 tracking-wide uppercase mb-3">Growing Fast</p>
+            <h2 className={`font-display font-extrabold text-white ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
+              Trusted by the Maldives
+            </h2>
+          </FadeIn>
 
-            {/* Instant Reconciliation */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 hover:border-amethyst-200 hover:shadow-sm transition-all">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-amethyst-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-amethyst-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                  </svg>
+          <div className={`${isMobile ? 'grid grid-cols-2 gap-6' : 'grid grid-cols-4 gap-8'}`}>
+            {[
+              { value: 2847, suffix: '+', label: 'Transactions', sublabel: 'processed' },
+              { value: 156, suffix: '', label: 'Active Sellers', sublabel: 'onboarded' },
+              { value: 425, suffix: 'K', label: 'MVR Volume', prefix: '', sublabel: 'monthly' },
+              { value: 98, suffix: '%', label: 'Satisfaction', sublabel: 'rate' },
+            ].map((stat, i) => (
+              <FadeIn key={stat.label} delay={i * 0.1}>
+                <div className="text-center rounded-2xl bg-white/5 backdrop-blur border border-white/10 p-6 hover:bg-white/10 transition-colors">
+                  <div className={`font-display font-extrabold text-white ${isMobile ? 'text-3xl' : 'text-4xl'} mb-1`}>
+                    <AnimatedCounter target={stat.value} suffix={stat.suffix} prefix={stat.prefix || ''} />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-300">{stat.label}</p>
+                  <p className="text-xs text-slate-500">{stat.sublabel}</p>
                 </div>
-                <div>
-                  <h3 className="font-display font-bold text-slate-900 text-[15px]">Instant Settlement</h3>
-                  <p className="mt-1 text-slate-500 text-sm leading-relaxed">
-                    Swipe confirms payment in seconds. Sellers see revenue instantly. Crypto releases automatically.
-                  </p>
-                </div>
-              </div>
-            </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Transparent */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 hover:border-amethyst-200 hover:shadow-sm transition-all">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-display font-bold text-slate-900 text-[15px]">Fully Transparent</h3>
-                  <p className="mt-1 text-slate-500 text-sm leading-relaxed">
-                    Track every order and every trade. Escrow balances visible in real-time. Nothing hidden.
-                  </p>
-                </div>
-              </div>
-            </div>
+      {/* ---- WHY SWIPESTORE ---- */}
+      <section className={`${isMobile ? 'px-5 py-16' : 'px-8 py-24'}`}>
+        <div className="mx-auto max-w-6xl">
+          <FadeIn className="text-center mb-14">
+            <p className="text-sm font-semibold text-amethyst-600 tracking-wide uppercase mb-3">Why SwipeStore</p>
+            <h2 className={`font-display font-extrabold text-slate-900 ${isMobile ? 'text-2xl' : 'text-4xl'}`}>
+              Built for how the Maldives
+              <br className={isMobile ? 'hidden' : ''} /> actually does business
+            </h2>
+          </FadeIn>
 
-            {/* Built for Maldives */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 hover:border-amethyst-200 hover:shadow-sm transition-all">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          <div className={`${isMobile ? 'flex flex-col gap-5' : 'grid grid-cols-2 gap-6'}`}>
+            {[
+              {
+                icon: <ShieldIcon />,
+                title: 'Zero Scams',
+                desc: 'Every transaction is verified by Swipe before products ship or crypto transfers. No fake screenshots, no chargebacks, no risk.',
+                color: 'from-ruby-500 to-ruby-600',
+                bg: 'bg-ruby-50',
+              },
+              {
+                icon: <ZapIcon />,
+                title: 'Instant Settlement',
+                desc: 'Swipe confirms payment in seconds. Sellers see revenue immediately. Crypto releases the moment payment clears.',
+                color: 'from-amethyst-500 to-amethyst-600',
+                bg: 'bg-amethyst-50',
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
                   </svg>
+                ),
+                title: 'Made for Maldives',
+                desc: 'MVR payments, Maldivian sellers, island delivery. Not a generic platform adapted for us — built from scratch for our market.',
+                color: 'from-blue-500 to-blue-600',
+                bg: 'bg-blue-50',
+              },
+              {
+                icon: (
+                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                    <line x1="1" y1="10" x2="23" y2="10" />
+                  </svg>
+                ),
+                title: 'Full Transparency',
+                desc: 'Track every order and every trade. Escrow balances visible in real-time. Complete transaction history at your fingertips.',
+                color: 'from-green-500 to-green-600',
+                bg: 'bg-green-50',
+              },
+            ].map((feature, i) => (
+              <FadeIn key={feature.title} delay={i * 0.1}>
+                <div className="group rounded-2xl border border-slate-200 bg-white p-7 hover:border-amethyst-200 hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-start gap-5">
+                    <div className={`w-12 h-12 rounded-xl ${feature.bg} flex items-center justify-center flex-shrink-0 text-slate-700 group-hover:scale-110 transition-transform`}>
+                      {feature.icon}
+                    </div>
+                    <div>
+                      <h3 className="font-display font-bold text-slate-900 text-[17px]">{feature.title}</h3>
+                      <p className="mt-2 text-slate-500 text-sm leading-relaxed">{feature.desc}</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-display font-bold text-slate-900 text-[15px]">Built for Maldives</h3>
-                  <p className="mt-1 text-slate-500 text-sm leading-relaxed">
-                    MVR payments, Maldivian sellers, local delivery. Designed for how we actually do business here.
-                  </p>
-                </div>
-              </div>
-            </div>
+              </FadeIn>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ---- FINAL CTA ---- */}
-      <section className={`${isMobile ? 'px-5 py-12' : 'px-8 py-20'}`}>
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className={`font-display font-bold text-slate-900 ${isMobile ? 'text-xl' : 'text-3xl'}`}>
-            Ready to get started?
-          </h2>
-          <p className="mt-3 text-slate-500 text-sm max-w-md mx-auto">
-            Whether you&apos;re buying, selling, or trading — Swipe makes it instant.
-          </p>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-amethyst-600 via-amethyst-700 to-ruby-600" />
+        <GridPattern />
+        <FloatingOrb className="w-96 h-96 bg-white -top-40 -right-40 opacity-10" />
+        <FloatingOrb className="w-72 h-72 bg-ruby-300 -bottom-20 -left-20 opacity-10" />
 
-          <div className={`mt-8 flex flex-wrap justify-center gap-3 ${isMobile ? 'flex-col' : ''}`}>
-            <Link
-              href="/marketplace"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-amethyst-600 px-6 py-3 text-sm font-semibold text-white hover:bg-amethyst-700 transition-colors"
-            >
-              Shop Marketplace
-            </Link>
-            <Link
-              href="/exchange"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
-            >
-              Buy Crypto
-            </Link>
-            <Link
-              href="/seller/login"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:border-amethyst-300 hover:text-amethyst-700 transition-colors"
-            >
-              Sell Products
-            </Link>
-            <Link
-              href="/seller/login"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 hover:border-amethyst-300 hover:text-amethyst-700 transition-colors"
-            >
-              Sell Crypto
-            </Link>
-          </div>
+        <div className={`relative mx-auto max-w-4xl text-center ${isMobile ? 'px-5 py-16' : 'px-8 py-24'}`}>
+          <FadeIn>
+            <h2 className={`font-display font-extrabold text-white leading-tight ${isMobile ? 'text-2xl' : 'text-5xl'}`}>
+              Ready to get started?
+            </h2>
+            <p className={`mt-5 text-amethyst-100 max-w-lg mx-auto ${isMobile ? 'text-[15px]' : 'text-lg'}`}>
+              Join the platform that&apos;s changing how the Maldives shops and trades.
+              Whether you&apos;re buying, selling, or exchanging — SwipeStore has you covered.
+            </p>
+
+            <div className={`mt-10 flex flex-wrap justify-center gap-4 ${isMobile ? 'flex-col' : ''}`}>
+              <Link
+                href="/marketplace"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-bold text-slate-900 shadow-xl hover:shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Browse Marketplace
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <Link
+                href="/exchange"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 backdrop-blur border border-white/25 px-8 py-4 text-sm font-bold text-white hover:bg-white/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Trade Crypto
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <Link
+                href="/seller/login"
+                className="group inline-flex items-center justify-center gap-2 rounded-xl bg-white/15 backdrop-blur border border-white/25 px-8 py-4 text-sm font-bold text-white hover:bg-white/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Start Selling
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* ---- FOOTER ---- */}
-      <footer className="border-t border-slate-100 bg-slate-50">
-        <div className={`mx-auto max-w-6xl ${isMobile ? 'px-5 py-8' : 'px-8 py-10'}`}>
-          <div className={`flex ${isMobile ? 'flex-col items-center gap-5' : 'items-center justify-between'}`}>
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-amethyst-600 flex items-center justify-center">
-                <span className="text-white text-[10px] font-bold">S</span>
+      <footer className="bg-slate-900 border-t border-slate-800">
+        <div className={`mx-auto max-w-7xl ${isMobile ? 'px-5 py-10' : 'px-8 py-14'}`}>
+          <div className={`${isMobile ? 'flex flex-col gap-8' : 'grid grid-cols-4 gap-12'}`}>
+            {/* Brand */}
+            <div className={isMobile ? '' : 'col-span-2'}>
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amethyst-500 to-amethyst-700 flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">S</span>
+                </div>
+                <span className="font-display font-extrabold text-white text-lg">SwipeStore</span>
               </div>
-              <span className="font-display font-bold text-slate-800 text-sm">Swipe</span>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
+                Social commerce and P2P crypto exchange for the Maldives.
+                Powered by Swipe instant payments.
+              </p>
             </div>
-            <div className={`flex flex-wrap gap-6 text-sm ${isMobile ? 'justify-center' : ''}`}>
-              <Link href="/marketplace" className="text-slate-500 hover:text-amethyst-600 transition-colors">Marketplace</Link>
-              <Link href="/exchange" className="text-slate-500 hover:text-amethyst-600 transition-colors">Exchange</Link>
-              <Link href="/shop/island-finds-mv" className="text-slate-500 hover:text-amethyst-600 transition-colors">Demo Store</Link>
-              <Link href="/seller/login" className="text-slate-500 hover:text-amethyst-600 transition-colors">Seller Login</Link>
+
+            {/* Links */}
+            <div>
+              <h4 className="font-display font-bold text-white text-sm mb-4">Platform</h4>
+              <div className="space-y-3">
+                <Link href="/marketplace" className="block text-sm text-slate-400 hover:text-amethyst-400 transition-colors">Marketplace</Link>
+                <Link href="/exchange" className="block text-sm text-slate-400 hover:text-amethyst-400 transition-colors">P2P Exchange</Link>
+                <Link href="/shop/island-finds-mv" className="block text-sm text-slate-400 hover:text-amethyst-400 transition-colors">Demo Store</Link>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-display font-bold text-white text-sm mb-4">For Sellers</h4>
+              <div className="space-y-3">
+                <Link href="/seller/login" className="block text-sm text-slate-400 hover:text-amethyst-400 transition-colors">Start Selling</Link>
+                <Link href="/seller/login" className="block text-sm text-slate-400 hover:text-amethyst-400 transition-colors">Seller Dashboard</Link>
+                <Link href="/seller/login" className="block text-sm text-slate-400 hover:text-amethyst-400 transition-colors">List Crypto</Link>
+              </div>
             </div>
           </div>
-          <p className={`mt-6 text-xs text-slate-400 ${isMobile ? 'text-center' : ''}`}>
-            &copy; 2026 Swipe. All rights reserved. Built for the Maldives.
-          </p>
+
+          {/* Bottom bar */}
+          <div className={`mt-10 pt-6 border-t border-slate-800 ${isMobile ? 'text-center' : 'flex items-center justify-between'}`}>
+            <p className="text-xs text-slate-500">
+              &copy; 2026 SwipeStore. All rights reserved.
+            </p>
+            <p className={`text-xs text-slate-600 ${isMobile ? 'mt-2' : ''}`}>
+              Powered by <span className="text-amethyst-400 font-semibold">Swipe</span> &middot; Built for the Maldives
+            </p>
+          </div>
         </div>
       </footer>
     </div>
