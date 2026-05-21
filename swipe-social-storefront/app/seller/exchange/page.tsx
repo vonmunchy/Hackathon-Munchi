@@ -101,7 +101,7 @@ export default function ExchangeDashboardPage() {
       )}
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Total USDT Escrowed</p>
           <p className="text-2xl font-mono font-bold text-slate-900 mt-1">{totalEscrowed.toFixed(2)}</p>

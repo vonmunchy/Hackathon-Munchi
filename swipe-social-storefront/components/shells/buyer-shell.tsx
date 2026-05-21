@@ -14,7 +14,10 @@ export function BuyerShell({ children }: BuyerShellProps) {
   if (isMobile) {
     return (
       <div className="flex h-dvh flex-col bg-slate-50">
-        <main className="flex-1 overflow-y-auto">
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{ paddingTop: 'max(12px, env(safe-area-inset-top, 12px))' }}
+        >
           {children}
         </main>
         <BuyerBottomBar />
