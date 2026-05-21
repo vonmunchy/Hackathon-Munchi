@@ -81,7 +81,8 @@ export default defineSchema({
     createdAt: v.number(),
     expiresAt: v.number(),
   })
-    .index("by_token", ["token"]),
+    .index("by_token", ["token"])
+    .index("by_storeId", ["storeId"]),
 
   exchangeListings: defineTable({
     storeId: v.id("stores"),

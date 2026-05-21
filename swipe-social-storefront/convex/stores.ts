@@ -1,4 +1,5 @@
 import { query, mutation, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { authenticateStore } from "./auth";
 
@@ -257,5 +258,42 @@ export const updateStoreProfile = mutation({
     const storeId = await authenticateStore(ctx, args.sessionToken);
     const { sessionToken: _, ...fields } = args;
     await ctx.db.patch(storeId, fields);
+  },
+});
+
+// ---------- Admin ----------
+
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const stores = await ctx.db.query("stores").collect();
+    return stores.map((s) => ({
+      _id: s._id,
+      name: s.name,
+      slug: s.slug,
+      sellerType: s.sellerType ?? null,
+      onboardingComplete: s.onboardingComplete ?? false,
+      hasSwipeCredentials: !!(s.swipeClientId && s.swipeClientSecret),
+      contactPhone: s.contactPhone ?? null,
+    }));
+  },
+});
+
+export const resetStore = mutation({
+  args: { storeId: v.id("stores") },
+  handler: async (ctx, args) => {
+    const store = await ctx.db.get(args.storeId);
+    if (!store) {
+      throw new Error("Store not found");
+    }
+    await ctx.db.patch(args.storeId, {
+      onboardingComplete: undefined,
+      swipeClientId: undefined,
+      swipeClientSecret: undefined,
+    });
+    await ctx.runMutation(internal.sessions.deleteByStoreId, {
+      storeId: args.storeId,
+    });
+    return { success: true, storeName: store.name };
   },
 });
