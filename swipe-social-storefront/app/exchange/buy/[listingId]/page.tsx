@@ -24,7 +24,8 @@ export default function ExchangeBuyPage({
   // Form state
   const [step, setStep] = useState<Step>(1);
   const [usdtAmount, setUsdtAmount] = useState("");
-  const [buyerWallet, setBuyerWallet] = useState("");
+  const DEMO_WALLET = "TXYZ1234567890abcdefghijklmnopqrs";
+  const [buyerWallet, setBuyerWallet] = useState(DEMO_WALLET);
   const [walletError, setWalletError] = useState("");
 
   // Purchase state
@@ -293,15 +294,25 @@ export default function ExchangeBuyPage({
           }`}
         />
         <button
-          onClick={handlePaste}
+          onClick={() => {
+            navigator.clipboard.writeText(buyerWallet);
+          }}
           className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200"
         >
-          Paste
+          Copy
         </button>
       </div>
       {walletError && (
         <p className="text-xs text-red-500">{walletError}</p>
       )}
+      <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+        <p className="text-xs text-amber-700 font-medium">
+          Demo wallet — do not send real funds
+        </p>
+      </div>
       <p className="text-xs text-slate-400">
         TRC20 format — starts with T, 34 characters
       </p>
