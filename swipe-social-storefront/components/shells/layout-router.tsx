@@ -13,9 +13,15 @@ export function LayoutRouter({ children }: { children: React.ReactNode }) {
 
   const isSeller = pathname.startsWith('/seller') && pathname !== '/seller/login'
   const isBuyer = pathname.startsWith('/marketplace') || pathname.startsWith('/exchange')
+  const isLanding = pathname === '/'
 
   if (isMobile === null) {
     return <SplashLoader />
+  }
+
+  // Landing page renders without any shell — it has its own nav and layout
+  if (isLanding) {
+    return <>{children}</>
   }
 
   if (isBuyer) {
