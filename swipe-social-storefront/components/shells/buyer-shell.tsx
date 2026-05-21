@@ -11,9 +11,9 @@ interface BuyerShellProps {
 }
 
 function getBuyerTopBarConfig(pathname: string): { title: string; showBack: boolean } | null {
-  // Top-level tabs don't need a back button — they ARE the destinations
-  if (pathname === '/marketplace') return { title: 'Marketplace', showBack: false }
-  if (pathname === '/exchange') return { title: 'P2P Exchange', showBack: false }
+  // Top-level tabs — show back button so users can always navigate back
+  if (pathname === '/marketplace') return { title: 'Marketplace', showBack: true }
+  if (pathname === '/exchange') return { title: 'P2P Exchange', showBack: true }
 
   // Sub-pages get a back button
   if (pathname.startsWith('/exchange/buy')) return { title: 'Buy USDT', showBack: true }
