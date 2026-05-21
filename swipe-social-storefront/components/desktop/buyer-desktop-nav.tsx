@@ -23,7 +23,7 @@ export function BuyerDesktopNav() {
             <span className="font-display text-xs font-bold text-white">S</span>
           </div>
           <span className="font-display text-[15px] font-semibold tracking-tight text-slate-900">
-            Swipe
+            SwiftStore
           </span>
         </Link>
 

@@ -86,7 +86,7 @@ export function SellerSidebar() {
             <span className="font-display text-sm font-bold text-white">S</span>
           </div>
           <h2 className="font-display text-[15px] font-semibold tracking-tight text-slate-900">
-            Swipe Store
+            SwiftStore
           </h2>
         </div>
       </div>
