@@ -36,8 +36,52 @@ SwiftStore provides:
 1. **Instant Storefronts** — Sellers get a shareable product page (`/shop/your-store`) in minutes
 2. **Swipe Payment Integration** — QR-based checkout with real-time payment confirmation
 3. **P2P USDT Exchange** — Sellers list USDT, buyers pay in MVR via Swipe, trustless escrow
-4. **Social Publishing** — Generate captions and publish products directly to Facebook/Instagram
+4. **AI-Powered Social Integration** — Trace seller's social posts, auto-generate inventory, publish directly
 5. **Multi-tenant Dashboard** — Each seller manages products, orders, payments, and exchange listings
+
+---
+
+## AI-Powered Inventory Generation (Vision)
+
+One of SwiftStore's key differentiators is how it bridges the gap between social media posts and a real product catalog:
+
+### How It Works
+
+```
+Seller connects Instagram/Facebook → SwiftStore reads their posts via Meta Graph API
+  → AI (Claude) analyzes post images + captions → Extracts product name, description,
+    price, category, variants → Auto-generates inventory draft
+  → Seller reviews, edits, confirms → Products go live on their storefront
+```
+
+1. **Social Post Tracing**: When a seller connects their Instagram or Facebook account via OAuth, SwiftStore accesses their recent posts through the Meta Graph API
+2. **AI Analysis**: Each post's image and caption are analyzed by Claude (Anthropic API) to extract structured product data — name, description, estimated price, category, and potential variants (sizes, colors)
+3. **Draft Inventory**: The AI-generated products are presented to the seller as editable drafts, pre-filled with information extracted from their posts
+4. **Seller Confirmation**: The seller reviews each product, adjusts prices, adds variants, uploads additional images, and confirms — turning social posts into a real catalog
+5. **Caption Generation**: When sellers want to promote products back on social media, AI generates optimized captions with hashtags tailored for the Maldivian market
+
+This creates a flywheel: **Social posts → AI-generated inventory → Storefront → Sales → New social posts with AI captions → More inventory**.
+
+### Current Implementation
+
+For this hackathon proof of concept:
+- The Meta Graph API integration is **functional** for reading posts and publishing content
+- AI caption generation is **implemented** using Claude API (`/api/social/caption`)
+- The full inventory auto-generation pipeline is **architected but not fully wired** — the individual pieces (Meta API read, AI analysis, product creation) all work independently
+- Sellers can currently import demo products or manually create products, with AI-assisted social publishing
+
+### Meta API Limitation
+
+> **Important for judges**: Meta requires a **4-6 week App Review process** before third-party Facebook/Instagram accounts can authorize with our app. During this review period, only the developer's own accounts can be used for OAuth login and social publishing. This is a standard Meta platform requirement, not a limitation of our implementation.
+>
+> For the hackathon demo, we use the developer's own Meta account to demonstrate the full OAuth flow, post reading, and social publishing. The code is written to support any authorized account — once Meta approves the app, any seller can connect their pages.
+
+### Meta Permissions Requested
+- `pages_show_list` — List seller's Facebook Pages
+- `pages_read_engagement` — Read posts and engagement data
+- `pages_manage_posts` — Publish product posts
+- `instagram_basic` — Read Instagram profile and media
+- `instagram_content_publish` — Publish to Instagram
 
 ---
 
@@ -51,7 +95,8 @@ SwiftStore provides:
 | **Order Management** | Real-time order status (pending → paid → shipped → delivered) |
 | **Swipe Payments** | Automatic QR generation, payment status polling, settlement |
 | **P2P Exchange** | Create USDT listings, set rates, partial fills, simulated TRC20 wallets |
-| **Social Integration** | Facebook/Instagram OAuth, AI caption generation, direct publishing |
+| **Social Integration** | Facebook/Instagram OAuth, AI caption generation, direct publishing, post tracing |
+| **AI Inventory** | Analyze social posts to auto-generate product catalog drafts for seller review |
 | **Store Settings** | Custom description, social links, WhatsApp, logo upload |
 
 ### For Buyers
@@ -80,7 +125,7 @@ SwiftStore provides:
 | **Payments** | Swipe API (OAuth2, QR payments, webhooks) |
 | **Auth** | Session-based with PIN login + Meta OAuth (Facebook/Instagram) |
 | **Crypto** | TRC20 USDT (simulated wallets for hackathon) |
-| **AI** | Anthropic Claude API (caption generation) |
+| **AI** | Anthropic Claude API (caption generation, inventory extraction) |
 | **Deployment** | Vercel (frontend) + Convex Cloud (backend) |
 
 ---
@@ -110,7 +155,12 @@ SwiftStore provides:
 │  ┌──────┴──┐   ┌──────┴──────┐  ┌───┴────────────┐    │
 │  │ Convex  │   │  Swipe API  │  │  Meta Graph    │    │
 │  │ Backend │   │  (Payments) │  │  API (Social)  │    │
-│  └─────────┘   └─────────────┘  └────────────────┘    │
+│  └─────────┘   └─────────────┘  └───┬────────────┘    │
+│                                      │                  │
+│                              ┌───────┴────────────┐    │
+│                              │  Claude AI (Anthropic)│   │
+│                              │  Captions + Inventory │   │
+│                              └────────────────────┘    │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -121,6 +171,15 @@ Buyer selects product → Enters delivery info → Creates order (Convex)
   → Generates Swipe payment (QR + short code) → Buyer scans QR
   → Swipe confirms payment → Order marked as PAID → Stock decremented
   → Seller notified → Buyer sees success page with seller contact
+```
+
+### Data Flow: AI Inventory Generation
+```
+Seller connects Instagram → Meta Graph API fetches recent posts
+  → Claude AI analyzes images + captions → Extracts product data
+  → Draft products created in Convex → Seller reviews & confirms
+  → Products go live on storefront → AI generates social captions
+  → Seller publishes back to Instagram/Facebook → Cycle repeats
 ```
 
 ### Data Flow: P2P Exchange
@@ -182,8 +241,8 @@ exchangeReservations → Time-locked purchase intents (5-min expiry)
 
 ```bash
 # Clone the repository
-git clone https://github.com/Hackathon-Munchi/SwiftStore.git
-cd SwiftStore/swipe-social-storefront
+git clone https://github.com/vonmunchy/Hackathon-Munchi.git
+cd Hackathon-Munchi/swipe-social-storefront
 
 # Install dependencies
 npm install
@@ -343,13 +402,20 @@ Everything else — the UI, database, order lifecycle, multi-tenant auth, exchan
 
 ## Future Roadmap
 
+### Post-Hackathon (Ready to Build)
+- [ ] Complete AI inventory auto-generation pipeline (pieces exist, need full wiring)
+- [ ] Meta App Review approval (submitted, awaiting 4-6 week review)
 - [ ] Real TRC20 blockchain integration (Tron network)
 - [ ] Swipe webhook for instant payment confirmation (vs polling)
-- [ ] Seller analytics dashboard (revenue, conversion rates)
+- [ ] Per-store Swipe credential isolation (architecture exists)
+
+### Medium Term
+- [ ] Seller analytics dashboard (revenue, conversion rates, top products)
 - [ ] Multi-language support (Dhivehi + English)
 - [ ] Push notifications for order updates
 - [ ] Inventory alerts and auto-restock suggestions
 - [ ] Rating & review system for sellers
+- [ ] Bulk product import from CSV/spreadsheet
 
 ---
 
