@@ -2,6 +2,8 @@
 
 **The Social Commerce Platform for Maldivian Sellers**
 
+> **Proof of Concept** — This project is a hackathon submission demonstrating the viability of a unified social commerce + P2P exchange platform for the Maldives. While fully functional end-to-end in demo mode, it uses simulated blockchain wallets and mock payment webhooks. The architecture and UX are production-grade; the integrations are ready to be connected to real infrastructure.
+
 SwiftStore is a full-stack social commerce platform that empowers Maldivian small businesses to sell products through their social media presence, accept payments via Swipe, and trade USDT through a built-in P2P exchange — all from a single dashboard.
 
 ---
@@ -291,6 +293,15 @@ SwiftStore/
 **Event**: Swipe Hackathon 2025  
 **Track**: Social Commerce + Crypto  
 **Team**: Munchi  
+
+### Proof of Concept Scope
+
+This is a working proof of concept. The following are simulated for the hackathon:
+- TRC20 wallet addresses and transaction hashes (randomly generated, not on-chain)
+- Swipe payment webhooks (demo mode with simulate buttons)
+- Per-store Swipe credential isolation (uses global credentials in demo)
+
+Everything else — the UI, database, order lifecycle, multi-tenant auth, exchange escrow logic — is real and functional.
 
 ### What Makes This Special
 
