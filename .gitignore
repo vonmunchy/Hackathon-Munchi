@@ -1,1 +1,26 @@
+# Environment variables (secrets)
 .env
+.env.*
+!.env.example
+!.env.local.example
+
+# Tool/IDE artifacts
+.gstack/
+.codex/
+bash.exe.stackdump
+
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/

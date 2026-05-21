@@ -16,13 +16,13 @@ export function LayoutRouter({ children }: { children: React.ReactNode }) {
   const isLanding = pathname === '/'
   const isBackstage = pathname.startsWith('/backstage')
 
-  if (isMobile === null) {
-    return <SplashLoader />
-  }
-
-  // Landing page and backstage render without any shell
+  // Landing page and backstage render without any shell or device-gated splash.
   if (isLanding || isBackstage) {
     return <>{children}</>
+  }
+
+  if (isMobile === null) {
+    return <SplashLoader />
   }
 
   if (isBuyer) {

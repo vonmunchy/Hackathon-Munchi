@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+/* ===== Swipe Social Storefront — Premium Design System ===== */
+/* Fusion of Bank of Maldives heritage + Swipe digital-first identity */
+
+@theme inline {
+  /* Amethyst — primary brand (Swipe violet) */
+  --color-amethyst-50:  #faf5ff;
+  --color-amethyst-100: #f3e8ff;
+  --color-amethyst-200: #e9d5ff;
+  --color-amethyst-300: #d8b4fe;
+  --color-amethyst-400: #c084fc;
+  --color-amethyst-500: #a855f7;
+  --color-amethyst-600: #9333ea;
+  --color-amethyst-700: #7e22ce;
+  --color-amethyst-800: #6b21a8;
+  --color-amethyst-900: #581c87;
+
+  /* Ruby — accent (BML crimson heritage) */
+  --color-ruby-50:  #fff1f2;
+  --color-ruby-100: #ffe4e6;
+  --color-ruby-200: #fecdd3;
+  --color-ruby-300: #fda4af;
+  --color-ruby-400: #fb7185;
+  --color-ruby-500: #f43f5e;
+  --color-ruby-600: #e11d48;
+  --color-ruby-700: #be123c;
+
+  /* Slate — neutral surfaces (cool, premium) */
+  --color-slate-50:  #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  /* Blue — shipped status badge */
+  --color-blue-100: #dbeafe;
+  --color-blue-700: #1d4ed8;
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-warning: #d97706;
+  --color-error:   #dc2626;
+
+  /* Typography */
+  --font-display: var(--font-inter);
+  --font-body:    var(--font-dm-sans);
+  --font-mono:    var(--font-jetbrains-mono);
+
+  /* Radius — refined, premium */
+  --radius-sm:   0.375rem;
+  --radius-md:   0.75rem;
+  --radius-lg:   1rem;
+  --radius-xl:   1.5rem;
+
+  /* Shadows — clean, elevated, subtle purple tint */
+  --shadow-sm:    0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md:    0 4px 12px rgba(15, 23, 42, 0.07);
+  --shadow-lg:    0 8px 24px rgba(15, 23, 42, 0.09);
+  --shadow-xl:    0 16px 48px rgba(15, 23, 42, 0.12);
+  --shadow-sheet: 0 -4px 24px rgba(15, 23, 42, 0.14);
+
+  /* Motion — smooth confidence */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: var(--color-slate-900);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
+}
+
+/* Safe area insets for mobile devices */
+@supports (padding: env(safe-area-inset-top)) {
+  :root {
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+  }
+}
