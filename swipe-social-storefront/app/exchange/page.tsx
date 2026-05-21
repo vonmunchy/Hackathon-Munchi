@@ -30,7 +30,7 @@ export default function ExchangeBrowsePage() {
           onClick={() => setActiveTab("buy")}
           className={`rounded-md px-6 py-2 text-sm font-semibold transition-colors ${
             activeTab === "buy"
-              ? "bg-emerald-500 text-white shadow-sm"
+              ? "bg-success text-white shadow-sm"
               : "text-slate-500 hover:text-slate-700"
           }`}
         >
@@ -166,22 +166,22 @@ function BuyTabContent({
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[540px]">
+        <table className="w-full">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/80">
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 md:px-4 md:py-3">
                 Advertiser
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 md:px-4 md:py-3">
                 Price
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 sm:table-cell">
                 Available
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 md:table-cell">
                 Limits
               </th>
-              <th className="sticky right-0 bg-slate-50/80 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 shadow-[-4px_0_8px_rgba(0,0,0,0.04)]">
+              <th className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-slate-500 md:px-4 md:py-3">
                 Trade
               </th>
             </tr>
@@ -196,45 +196,50 @@ function BuyTabContent({
                   className="transition-colors hover:bg-slate-50/50"
                 >
                   {/* Advertiser */}
-                  <td className="px-4 py-3.5">
+                  <td className="px-3 py-2.5 md:px-4 md:py-3.5">
                     <div className="flex items-center gap-2">
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amethyst-100 text-xs font-bold text-amethyst-600">
                         {listing.storeName.charAt(0).toUpperCase()}
                       </div>
-                      <span className="max-w-[120px] truncate text-sm font-medium text-slate-800">
-                        {listing.storeName}
-                      </span>
+                      <div className="min-w-0">
+                        <span className="block max-w-[100px] truncate text-sm font-medium text-slate-800 sm:max-w-[120px]">
+                          {listing.storeName}
+                        </span>
+                        <span className="block text-xs text-slate-400 sm:hidden">
+                          {listing.availableBalance.toLocaleString()} USDT
+                        </span>
+                      </div>
                     </div>
                   </td>
 
                   {/* Price */}
-                  <td className="px-4 py-3.5">
+                  <td className="px-3 py-2.5 md:px-4 md:py-3.5">
                     <span className="font-mono text-sm font-semibold text-slate-900">
                       {formatMVR(listing.rate)}
                     </span>
                     <span className="ml-1 text-xs text-slate-400">MVR</span>
                   </td>
 
-                  {/* Available */}
-                  <td className="px-4 py-3.5">
+                  {/* Available — hidden on mobile */}
+                  <td className="hidden px-4 py-3.5 sm:table-cell">
                     <span className="font-mono text-sm text-slate-700">
                       {listing.availableBalance.toLocaleString()}
                     </span>
                     <span className="ml-1 text-xs text-slate-400">USDT</span>
                   </td>
 
-                  {/* Limits */}
-                  <td className="px-4 py-3.5">
+                  {/* Limits — hidden on mobile/tablet */}
+                  <td className="hidden px-4 py-3.5 md:table-cell">
                     <span className="text-xs text-slate-500">
                       {minMvr} – {maxMvr}
                     </span>
                   </td>
 
-                  {/* Action — sticky on mobile */}
-                  <td className="sticky right-0 bg-white px-4 py-3.5 text-right shadow-[-4px_0_8px_rgba(0,0,0,0.04)]">
+                  {/* Action */}
+                  <td className="px-3 py-2.5 text-right md:px-4 md:py-3.5">
                     <Link
                       href={`/exchange/buy/${listing._id}`}
-                      className="inline-flex items-center rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
+                      className="inline-flex items-center rounded-lg bg-success px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-emerald-600"
                     >
                       Buy USDT
                     </Link>

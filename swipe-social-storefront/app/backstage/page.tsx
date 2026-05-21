@@ -161,8 +161,8 @@ export default function BackstagePage() {
           <p className="text-sm text-slate-400">No sellers registered yet</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
-          <table className="w-full">
+        <div className="overflow-x-auto rounded-xl border border-slate-700 bg-slate-800">
+          <table className="w-full min-w-[640px]">
             <thead>
               <tr className="border-b border-slate-700 bg-slate-800/80">
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
