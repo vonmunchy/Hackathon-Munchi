@@ -8,7 +8,7 @@ SwiftStore is a full-stack social commerce platform that empowers Maldivian smal
 
 ## Live Demo
 
-- **Production**: [swiftstore.vercel.app](https://swiftstore.vercel.app) *(deployment pending)*
+- **Production**: [mvswiftstore.vercel.app](https://mvswiftstore.vercel.app)
 - **Demo Store**: Visit `/seller/login` → use slug `island-crafts` with PIN `1234`
 - **Marketplace**: Browse all products at `/marketplace`
 - **P2P Exchange**: Trade USDT at `/exchange`
