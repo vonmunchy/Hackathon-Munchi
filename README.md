@@ -25,7 +25,18 @@ In the Maldives, thousands of small sellers operate exclusively through Instagra
 - **No unified storefront** — products scattered across social posts
 - **Manual order management** — tracking orders via DMs and spreadsheets
 - **Limited payment options** — no integrated digital payment flow
-- **No crypto on-ramp** — growing demand for USDT but no local P2P platform
+- **No safe crypto on-ramp** — growing demand for USDT but no trustworthy local platform
+
+### The Crypto Scam Problem
+
+There is clear, growing demand for cryptocurrency in the Maldives — but the current landscape is dangerous. People buy and sell USDT through informal Telegram groups, WhatsApp chats, and social media DMs with no protection. This has led to:
+
+- **Widespread scams** — sellers take MVR and never send USDT, or buyers receive USDT and reverse their bank transfer
+- **Zero recourse** — no escrow, no dispute resolution, no transaction records
+- **Trust deficit** — legitimate traders can't distinguish themselves from scammers
+- **Financial losses** — ordinary people losing money to fraudulent P2P deals
+
+**SwiftStore's P2P Exchange was built specifically to solve this.** By introducing an escrow-backed exchange powered by Swipe payments, we eliminate the trust problem entirely. Neither party can cheat because the platform holds funds in escrow until both sides fulfill their obligations.
 
 ---
 
@@ -182,13 +193,20 @@ Seller connects Instagram → Meta Graph API fetches recent posts
   → Seller publishes back to Instagram/Facebook → Cycle repeats
 ```
 
-### Data Flow: P2P Exchange
+### Data Flow: P2P Exchange (Escrow-Protected)
 ```
-Seller creates USDT listing (amount + rate) → Simulates TRC20 deposit
-  → Listing goes ACTIVE → Buyer reserves amount (5-min window)
-  → Buyer pays MVR via Swipe → Payment confirmed
-  → USDT "transferred" to buyer wallet → Transaction recorded
+Seller deposits USDT into platform escrow wallet → Listing goes ACTIVE
+  → Buyer reserves amount (5-min time-locked window)
+  → Buyer pays MVR via Swipe → Swipe confirms payment is real
+  → Platform releases escrowed USDT to buyer's wallet → Transaction recorded
+  → Both parties protected — no one can cheat
 ```
+
+**Why escrow matters:** In traditional P2P trades (Telegram groups, DMs), either party can disappear after receiving payment. SwiftStore's escrow model ensures:
+- Seller's USDT is **locked before** any buyer can reserve it
+- Buyer's MVR payment is **verified by Swipe** before USDT is released
+- Time-locked reservations **prevent griefing** (5-min expiry if buyer doesn't pay)
+- Full **transaction history** with TX hashes for both parties
 
 ---
 
@@ -364,12 +382,13 @@ Everything else — the UI, database, order lifecycle, multi-tenant auth, exchan
 
 ### What Makes This Special
 
-1. **Real-world problem**: Maldivian sellers actually operate this way today — via social DMs
-2. **Full integration**: End-to-end from product listing to payment settlement
-3. **P2P Exchange**: Novel feature — no existing local USDT↔MVR platform
-4. **Dual-platform UX**: True mobile-first AND desktop experience (not just responsive)
-5. **Production-ready architecture**: Multi-tenant, session-based auth, real-time Convex backend
-6. **Demo mode**: Fully functional without real payment infrastructure
+1. **Solving a real scam problem**: People in the Maldives are actively losing money to crypto scams in informal P2P trades. Our escrow-backed exchange eliminates this risk entirely by ensuring neither party can cheat.
+2. **Real-world commerce problem**: Maldivian sellers actually operate via social DMs today — SwiftStore gives them real storefronts with real payments
+3. **Escrow-backed P2P Exchange**: First local USDT↔MVR platform with Swipe-verified escrow — no existing solution exists in the Maldives
+4. **Full integration**: End-to-end from product listing to payment settlement to crypto exchange, all in one platform
+5. **Dual-platform UX**: True mobile-first AND desktop experience (not just responsive)
+6. **AI-powered catalog**: Social posts automatically analyzed to generate product inventory
+7. **Production-ready architecture**: Multi-tenant, session-based auth, real-time Convex backend
 
 ---
 
